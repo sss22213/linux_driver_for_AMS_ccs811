@@ -61,6 +61,17 @@ static inline void _reset(struct _ccs811_device *ccs811_device)
     _write_reg(ccs811_device, SW_RESET, reset_cmd, sizeof(reset_cmd)/sizeof(reset_cmd[0]));
 }
 
+void ccs811_get_status(struct _ccs811_device *ccs811_device, u8 *buf)
+{
+   _read_reg(ccs811_device, STATUS, buf, 1);
+}
+
+void ccs811_get_error_id(struct _ccs811_device *ccs811_device, u8 *buf)
+{
+   _read_reg(ccs811_device, ERROR_ID, buf, 1);
+}
+
+
 void ccs881_set_humidity(struct _ccs811_device *ccs811_device, u8 humidity_high, u8 humidity_low)
 {
     u8 eva_data[4] = {0};
@@ -108,9 +119,12 @@ void ccs811_get_tovc(struct _ccs811_device *ccs811_device, u8 *buf)
 
     tvoc = buf[2] << 8 | buf[3];
 
+    // Ripple
     if ((eco2 >= CCS811_ECO2_MAXIMUM || eco2 <= CCS811_ECO2_MINIMUM) || (tvoc >= CCS811_TVOC_MAXIMUM || tvoc <= CCS811_TVOC_MINIMUM)) {
-        buf[4] = 0;
+        buf[4] = _CCS811_TVOC_ECO2_STATUS_INEFFECTIVE;
         memset(buf, 0, sizeof(buf[0])*8);
+    } else {
+        buf[4] = _CCS811_TVOC_ECO2_STATUS_EFFECTIVE;
     }
 }
 
@@ -147,7 +161,7 @@ _CCS811_INITIAL_RESULT ccs811_startup(struct _ccs811_device *ccs811_device)
     ccs881_set_temperature(ccs811_device, 0x64, 0x00);
 
     // Config Mode 1
-    ccs881_set_measure_mode(ccs811_device, 1);
+    //ccs881_set_measure_mode(ccs811_device, 0);
 
     return _CCS811_INITIAL_SUCCESS;
 }

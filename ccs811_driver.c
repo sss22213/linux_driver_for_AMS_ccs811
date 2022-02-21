@@ -14,6 +14,7 @@
 
 #define CCS811_DEV_NAME "ccs811"
 #define	IOCTL_WRITE	_IOW('c', 1, struct _ccs811_ioctl)
+#define	IOCTL_READ	_IOR('c', 2, struct _ccs811_ioctl)
 #define CCS811_UNUSED(x) if(x){}
 
 static struct class *ccs811_class = NULL;
@@ -31,6 +32,10 @@ typedef enum {
     _CCS811_SET_HUMIDITY,
 } _CCS811_SET;
 
+typedef enum {
+    _CCS811_GET_STATUS = 1,
+    _CCS811_GET_ERROR_ID,
+} _CCS811_GET;
 
 struct _ccs811_ioctl {
     uint8_t ccs811_cmd;
@@ -47,6 +52,8 @@ struct ccs811_i2c_cdev {
 static long int ccs811_ioctl(struct file *file, unsigned int ioctl_num, unsigned long ioctl_param)
 {
     struct _ccs811_ioctl ccs811_ioctl;
+
+    u8 read_buf = 0;
 
     switch (ioctl_num) {
     case IOCTL_WRITE:
@@ -67,6 +74,26 @@ static long int ccs811_ioctl(struct file *file, unsigned int ioctl_num, unsigned
         default:
             break;
         }
+        break;
+
+    case IOCTL_READ:
+        CCS811_UNUSED(copy_from_user(&ccs811_ioctl, (int __user*)ioctl_param, sizeof(struct _ccs811_ioctl)));
+        switch (ccs811_ioctl.ccs811_cmd) {
+        case _CCS811_GET_STATUS:
+            ccs811_get_status(&ccs811_device, &read_buf);
+            ccs811_ioctl.ccs811_cmd = _CCS811_GET_STATUS;
+            ccs811_ioctl.low_val = read_buf;
+            break;
+
+        case _CCS811_GET_ERROR_ID:
+            ccs811_get_error_id(&ccs811_device, &read_buf);
+            ccs811_ioctl.ccs811_cmd = _CCS811_GET_ERROR_ID;
+            ccs811_ioctl.low_val = read_buf;
+            break;
+        default:
+            break;
+        }
+        CCS811_UNUSED(copy_to_user((int __user*)ioctl_param, &ccs811_ioctl, sizeof(struct _ccs811_ioctl)));
         break;
     }
 

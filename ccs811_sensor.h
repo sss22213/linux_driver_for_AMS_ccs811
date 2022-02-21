@@ -37,6 +37,12 @@ typedef enum {
 } _CCS811_REGISTER_ADDRESS;
 
 typedef enum {
+    
+    _CCS811_TVOC_ECO2_STATUS_INEFFECTIVE,
+    _CCS811_TVOC_ECO2_STATUS_EFFECTIVE,
+} _CCS811_TVOC_ECO2_STATUS;
+
+typedef enum {
     APP_START = 0xF4
 } _CCS811_BOOTLOADER_REGISTER_ADDRESS;
 
@@ -58,5 +64,7 @@ void ccs811_get_tovc(struct _ccs811_device*, u8*);
 void ccs881_set_measure_mode(struct _ccs811_device*, u8);
 void ccs881_set_humidity(struct _ccs811_device*, u8, u8);
 void ccs881_set_temperature(struct _ccs811_device*, u8, u8);
+void ccs811_get_status(struct _ccs811_device*, u8*);
+void ccs811_get_error_id(struct _ccs811_device*, u8*);
 
 #endif
